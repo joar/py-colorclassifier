@@ -16,148 +16,108 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import colorsys
 import logging
 
-from collections import OrderedDict
+from colormath.color_objects import LabColor, RGBColor
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logging.basicConfig()
-# logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 
 class Classifier():
     '''
-    Color range definitions, currently all added by me (Joar).
+    Classifier
 
-    Colors ranges might overlap, colors preceding other have the advantage.
-
-    Wiki* colors taken from http://goo.gl/X8Pp3 [books.google.com], via
-    http://en.wikipedia.org/wiki/Color and does not cover the full colorspace
+    Example:
+        >>> classifier = Classifier(rgb=[255, 170, 0])
+        >>> classifier.get_name()
+        'orange'
     '''
-    color_map = OrderedDict({
-        'LightBlue': {
-            'h': [212, 258],
-            's': [13, 51],
-            'v': [91, 100]},
-        'Blue': {
-            'h': [212, 258],
-            's': [0, 100],
-            'v': [0, 100]},
-        'Red': {
-            'h': [0, 9],
-            's': [1, 100],
-            'v': [1, 100]},
-        'Orange': {
-            'h': [10, 43],
-            's': [0, 100],
-            'v': [0, 100]},
-        'Yellow': {
-            'h': [44, 70],
-            's': [0, 100],
-            'v': [0, 100]},
-        'Green': {
-            'h': [71, 165],
-            's': [0, 100],
-            'v': [0, 100]},
-        'Turquoise': {
-            'h': [166, 185],
-            's': [0, 100],
-            'v': [0, 100]},
-        'Blue2': {
-                'h': [186, 265],
-                's': [0, 100],
-                'v': [0, 100]},
-        'WikiRed': {
-            'h': [0, 7],
-            's': [0, 100],
-            'v': [61, 100]},
-        'WikiOrange': {
-            'h': [8, 60],
-            's': [0, 100],
-            'v': [90, 100]},
-        'WikiYellow': {
-            'h': [61, 120],
-            's': [0, 100],
-            'v': [90, 100]},
-        'WikiGreen': {
-            'h': [121, 188],
-            's': [0, 100],
-            'v': [64, 100]},
-        'WikiBlue': {
-            'h': [189, 252],
-            's': [0, 100],
-            'v': [64, 100]},
-        'WikiViolet': {
-            'h': [253, 264],
-            's': [0, 100],
-            'v': [64, 100]},
-        })
+    lab = LabColor
 
-    matrix = {
-        'h': dict()}
+    colors = {
+        'red': (255, 0, 0),
+        'green': (0, 255, 0),
+        'blue': (0, 0, 255),
+        'yellow': (255, 255, 0),
+        'cyan': (0, 255, 255),
+        'violet': (255, 0, 255),
+        'orange': (255, 170, 0),
+        'black': (0, 0, 0),
+        'white': (255, 255, 255),
+        'brown': (123, 52, 0),
+        'gray': (127, 127, 127),
+        'lightblue': (173, 173, 255),
+        'lightred': (255, 173, 173),
+        'lightgreen': (173, 255, 173),
+        }
+
+    colors_lab = dict()
 
     def __init__(self, **kwargs):
-        for i in range(0, 361):
-            self.matrix['h'].update({i: OrderedDict()})
-
-        self.populate_colorspace()
-
         if kwargs.get('rgb'):
-            self.set_rgb(
-                kwargs.get('rgb'))
+            self.set_rgb(kwargs.get('rgb'))
 
     def set_rgb(self, rgb):
-        for i in range(len(rgb)):
-            rgb[i] /= 255
-
-        self.hsv = colorsys.rgb_to_hsv(*rgb)
-        logger.info('Setting self.hsv to {hsv} based on rgb: {rgb}'.format(
-                hsv=self.hsv,
+        '''
+        Pass an RGB value to the classifier
+        '''
+        rgb = RGBColor(*rgb)
+        logger.debug(rgb.get_rgb_hex())
+        self.lab = rgb.convert_to('lab')
+        logger.debug('Saved lab: {lab} from rgb: {rgb}'.format(
+                lab=self._lab_to_tuple(self.lab),
                 rgb=rgb))
+        self._update_lab_colors()
 
-    def populate_colorspace(self):
-        for name, data in self.color_map.items():
-            logger.debug(data['h'])
-            if 'h' in data:
-                for i in range(data['h'][0], data['h'][1] + 1):
-                    self.matrix['h'][i].update({
-                            name: data})
-                    logger.debug('Appending {name} to h:{i}'.format(
-                            name=name,
-                            i=i))
-
-    def find_color(self):
-        (h, s, v) = self.hsv
-
-        hue = round(h * 360, 0)
-        sat = round(s * 100, 0)
-        val = round(v * 100, 0)
-
-        logger.debug(self.matrix['h'][hue])
-        for name, data in self.matrix['h'][hue].items():
-            if 's' in data and 'v' in data:
-                if sat in range(data['s'][0], data['s'][1] + 1) \
-                        and val in range(data['v'][0], data['v'][1] + 1):
-                    logger.debug('sat and val found in range of {name}'.format(
-                            name=name))
-                    return dict(
-                        name=name,
-                        data=self.matrix['h'][hue][name])
-            else:
-                logger.debug('No s and v in data')
-        logger.info('Returning False, this is the data at hue: {hue}\n'
-                     '{data}'.format(
-                hue=hue,
-                data=self.matrix['h'][hue]))
-        return False
+    def _update_lab_colors(self):
+        for name, val in self.colors.items():
+            self.colors_lab.update({
+                    name: self._lab_to_tuple(
+                        self._rgb_to_lab(
+                            list(
+                                val)))})
+        logger.debug('colors_lab: %1s' % self.colors_lab)
+        return True
 
     def get_name(self):
-        data = self.find_color()
-        if data and 'name' in data.keys():
-            return data['name']
+        '''
+        Get color name from the classifier.
+        '''
+        (name, values) = min(self.colors_lab.items(),
+            key=ColorDistance(self._lab_to_tuple(self.lab)))
+        return name
 
-        return False
+    def _lab_to_tuple(self, lab):
+        return (lab.lab_l, lab.lab_a, lab.lab_b)
+
+    def _rgb_to_lab(self, rgb):
+        rgb = RGBColor(*rgb)
+        return rgb.convert_to('lab')
+
+
+class ColorDistance(object):
+    '''
+    Calculates the distance between 3-tuples with numbers
+
+    Example:
+    min(
+        dict(
+            black=(0, 0, 0),
+            red=(255, 0, 0),
+            blue=(0, 0, 255)
+        ).items(),
+        key=ColorDistance((255, 0, 0))
+    '''
+    def __init__(self, color):
+        self.color = color
+
+    def __call__(self, item):
+        return self.distance(self.color, item[1])
+
+    def distance(self, left, right):
+        return sum((l - r) ** 2 for l, r in zip(left, right)) ** 0.5
 
 
 if __name__ == '__main__':
@@ -168,4 +128,6 @@ if __name__ == '__main__':
     cc.set_rgb([255, 170, 0])
     print(cc.get_name())
     cc.set_rgb([0, 0, 0])
+    print(cc.get_name())
+    cc.set_rgb([0, 173, 255])
     print(cc.get_name())
