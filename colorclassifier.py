@@ -121,13 +121,13 @@ class ColorDistance(object):
 
 
 if __name__ == '__main__':
-    cc = Classifier(rgb=[198, 224, 255])
-    print(cc.get_name())
-    cc.set_rgb([255, 0, 0])
-    print(cc.get_name())
-    cc.set_rgb([255, 170, 0])
-    print(cc.get_name())
-    cc.set_rgb([0, 0, 0])
-    print(cc.get_name())
-    cc.set_rgb([0, 173, 255])
-    print(cc.get_name())
+    c = Classifier(rgb=[198, 224, 255])
+    print(c.get_name())
+    c.set_rgb([255, 0, 0])
+    print(c.get_name())
+    c.set_rgb([255, 170, 0])
+    print(c.get_name())
+    c.set_rgb([0, 0, 0])
+    print(c.get_name())
+    c.set_rgb([0, 173, 255])
+    print(c.get_name())
