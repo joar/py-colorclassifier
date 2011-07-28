@@ -10,7 +10,7 @@ License
 Introduction
 ------------
 
-You give ``colorclassifier`` a RGB color value, ``colorclassifier`` gives you
+You give ``Classifier`` a RGB color value, ``Classifier`` gives you
 the most appropriate color name it can find.
 
 -----
