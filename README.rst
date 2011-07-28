@@ -6,6 +6,13 @@ Author
 License
      GPL
 
+------------
+Introduction
+------------
+
+You give ``colorclassifier`` a RGB color value, ``colorclassifier`` gives you
+the most appropriate color name it can find.
+
 -----
 Usage
 -----
