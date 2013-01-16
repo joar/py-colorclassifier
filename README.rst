@@ -1,10 +1,8 @@
 =============================================
 ``colorclassifier`` - Python color classifier
 =============================================
-Author
-    Joar Wandborg
-License
-     GPL
+:Author: Joar Wandborg
+:License: AGPLv3 or later
 
 ------------
 Introduction
